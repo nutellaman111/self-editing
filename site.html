@@ -5,17 +5,13 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/theme/monokai.min.css"
-    />
+
     <style>
       html,
       body,
       .CodeMirror {
         margin: 0;
         height: 100%;
-        font-size: 2rem;
       }
     </style>
   </head>
@@ -23,6 +19,7 @@
     <textarea id="editor"></textarea>
     <script>
       function main() {
+        let html = document.documentElement.outerHTML;
         const b = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/",
           scripts = [
             "codemirror.min.js",
@@ -32,13 +29,26 @@
             "mode/htmlmixed/htmlmixed.min.js",
           ];
         (function load(i) {
-          if (i >= scripts.length)
-            return CodeMirror.fromTextArea(document.getElementById("editor"), {
+          if (i >= scripts.length) {
+            const ta = document.getElementById("editor");
+            ta.value = html;
+            const editor = CodeMirror.fromTextArea(ta, {
               lineNumbers: true,
               mode: "htmlmixed",
-              theme: "monokai",
             });
-          let s = document.body.appendChild(document.createElement("script"));
+
+            // Listen for changes and rewrite page
+            editor.on("change", () => {
+              try {
+                const html = editor.getValue();
+                document.open();
+                document.write(html);
+                document.close();
+              } catch (e) {}
+            });
+            return;
+          }
+          const s = document.body.appendChild(document.createElement("script"));
           s.src = b + scripts[i];
           s.onload = () => load(i + 1);
         })(0);
