@@ -1,8 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <title>CodeMirror HTML Example</title>
+    <title>CodeMirror Example</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css"
@@ -13,61 +11,38 @@
     />
     <style>
       html,
-      body {
+      body,
+      .CodeMirror {
         margin: 0;
         height: 100%;
-      }
-      .CodeMirror {
-        height: 100%;
-        font-size: 1.2rem;
+        font-size: 2rem;
       }
     </style>
   </head>
   <body>
-    <textarea id="editor">
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Test</title>
-  </head>
-  <body>
-    <h1>Hello World</h1>
-  </body>
-</html></textarea
-    >
-
+    <textarea id="editor"></textarea>
     <script>
       function main() {
-        const scriptBase =
-          "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/";
-        const scripts = [
-          "codemirror.min.js",
-          "mode/xml/xml.min.js",
-          "mode/javascript/javascript.min.js",
-          "mode/css/css.min.js",
-          "mode/htmlmixed/htmlmixed.min.js",
-        ];
-
-        function loadScript(index) {
-          if (index >= scripts.length) {
-            const myTextarea = document.getElementById("editor");
-            CodeMirror.fromTextArea(myTextarea, {
+        const b = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/",
+          scripts = [
+            "codemirror.min.js",
+            "mode/xml/xml.min.js",
+            "mode/javascript/javascript.min.js",
+            "mode/css/css.min.js",
+            "mode/htmlmixed/htmlmixed.min.js",
+          ];
+        (function load(i) {
+          if (i >= scripts.length)
+            return CodeMirror.fromTextArea(document.getElementById("editor"), {
               lineNumbers: true,
               mode: "htmlmixed",
               theme: "monokai",
             });
-            return;
-          }
-
-          const script = document.createElement("script");
-          script.src = scriptBase + scripts[index];
-          script.onload = () => loadScript(index + 1);
-          document.body.appendChild(script);
-        }
-
-        loadScript(0);
+          let s = document.body.appendChild(document.createElement("script"));
+          s.src = b + scripts[i];
+          s.onload = () => load(i + 1);
+        })(0);
       }
-
       main();
     </script>
   </body>
