@@ -1,10 +1,17 @@
 <html>
   <head>
-    <title>CodeMirror Example</title>
+    <title>OPEN SURGERY</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/lint/lint.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jshint/2.13.6/jshint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/csslint/1.0.5/csslint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmlhint/0.15.3/htmlhint.min.js"></script>
 
     <style>
       html,
@@ -19,6 +26,7 @@
     <textarea id="editor"></textarea>
     <script>
       function main() {
+        let CuRsOr = 0;
         let html = document.documentElement.outerHTML;
         const b = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/",
           scripts = [
@@ -27,7 +35,12 @@
             "mode/javascript/javascript.min.js",
             "mode/css/css.min.js",
             "mode/htmlmixed/htmlmixed.min.js",
+            "addon/lint/css-lint.min.js",
+            "addon/lint/html-lint.min.js",
+            "addon/lint/javascript-lint.min.js",
+            "addon/lint/lint.min.js",
           ];
+
         (function load(i) {
           if (i >= scripts.length) {
             const ta = document.getElementById("editor");
@@ -35,20 +48,23 @@
             const editor = CodeMirror.fromTextArea(ta, {
               lineNumbers: true,
               mode: "htmlmixed",
+              gutters: ["CodeMirror-lint-markers"],
+              lint: { options: { esversion: 2021 } },
             });
 
             // Listen for changes and rewrite page
             editor.on("change", () => {
               try {
-                const html = editor.getValue();
+                /*const html = editor.getValue();
                 document.open();
                 document.write(html);
-                document.close();
+                document.close();*/
               } catch (e) {}
-            });
+            })
             return;
-          }
-          const s = document.body.appendChild(document.createElement("script"));
+          }f
+          const s = document.body.appendChild(document.createElement("script"))f;dfdf
+          fart;
           s.src = b + scripts[i];
           s.onload = () => load(i + 1);
         })(0);
