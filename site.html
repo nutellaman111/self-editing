@@ -2,53 +2,73 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Self-Editing Page</title>
+    <title>CodeMirror HTML Example</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/theme/monokai.min.css"
+    />
     <style>
       html,
-      body,
-      #editor {
+      body {
         margin: 0;
         height: 100%;
-        width: 100%;
-        font-size: 1.25rem;
+      }
+      .CodeMirror {
+        height: 100%;
+        font-size: 1.2rem;
       }
     </style>
   </head>
   <body>
-    <h1>hi</h1>
-    <div id="editor"></div>
+    <textarea id="editor">
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test</title>
+  </head>
+  <body>
+    <h1>Hello World</h1>
+  </body>
+</html></textarea
+    >
 
     <script>
-      function yeah() {
-        console.log("yeah");
-        let initialHTML = document.documentElement.outerHTML;
+      function main() {
+        const scriptBase =
+          "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/";
+        const scripts = [
+          "codemirror.min.js",
+          "mode/xml/xml.min.js",
+          "mode/javascript/javascript.min.js",
+          "mode/css/css.min.js",
+          "mode/htmlmixed/htmlmixed.min.js",
+        ];
 
-        const aceScript = document.createElement("script");
-        aceScript.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js";
+        function loadScript(index) {
+          if (index >= scripts.length) {
+            const myTextarea = document.getElementById("editor");
+            CodeMirror.fromTextArea(myTextarea, {
+              lineNumbers: true,
+              mode: "htmlmixed",
+              theme: "monokai",
+            });
+            return;
+          }
 
-        aceScript.onload = () => {
-          const editor = ace.edit("editor", {
-            mode: "ace/mode/html",
-            showPrintMargin: false,
-          });
+          const script = document.createElement("script");
+          script.src = scriptBase + scripts[index];
+          script.onload = () => loadScript(index + 1);
+          document.body.appendChild(script);
+        }
 
-          // Load the full initial HTML
-          editor.setValue(initialHTML, -1);
-
-          editor.session.on("change", () => {
-            const html = editor.getValue();
-            console.log(html);
-
-            // Replace the page while keeping the editor alive
-            document.open();
-            document.write(html);
-            document.close();
-          });
-        };
-        document.head.appendChild(aceScript);
+        loadScript(0);
       }
-      yeah();
+
+      main();
     </script>
   </body>
 </html>
