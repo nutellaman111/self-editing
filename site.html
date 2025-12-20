@@ -1,75 +1,55 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>OPEN SURGERY</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/lint/lint.min.css"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jshint/2.13.6/jshint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/csslint/1.0.5/csslint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmlhint/0.15.3/htmlhint.min.js"></script>
-
+    <meta charset="UTF-8" />
+    <title>Self-Editing Page</title>
     <style>
       html,
       body,
-      .CodeMirror {
+      #editor {
         margin: 0;
         height: 100%;
+        width: 100%;
+        font-size: 1.25rem;
       }
     </style>
+    <link rel="stylesheet" href="ace.css" />
   </head>
   <body>
-    <textarea id="editor"></textarea>
+    <h1>hi</h1>
+    <div id="editor"></div>
+
     <script>
-      function main() {
-        let CuRsOr = 0;
-        let html = document.documentElement.outerHTML;
-        const b = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/",
-          scripts = [
-            "codemirror.min.js",
-            "mode/xml/xml.min.js",
-            "mode/javascript/javascript.min.js",
-            "mode/css/css.min.js",
-            "mode/htmlmixed/htmlmixed.min.js",
-            "addon/lint/css-lint.min.js",
-            "addon/lint/html-lint.min.js",
-            "addon/lint/javascript-lint.min.js",
-            "addon/lint/lint.min.js",
-          ];
+      function yeah() {
+        console.log("yeah");
+        let initialHTML = document.documentElement.outerHTML;
 
-        (function load(i) {
-          if (i >= scripts.length) {
-            const ta = document.getElementById("editor");
-            ta.value = html;
-            const editor = CodeMirror.fromTextArea(ta, {
-              lineNumbers: true,
-              mode: "htmlmixed",
-              gutters: ["CodeMirror-lint-markers"],
-              lint: { options: { esversion: 2021 } },
-            });
+        const aceScript = document.createElement("script");
+        aceScript.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js";
 
-            // Listen for changes and rewrite page
-            editor.on("change", () => {
-              try {
-                /*const html = editor.getValue();
-                document.open();
-                document.write(html);
-                document.close();*/
-              } catch (e) {}
-            })
-            return;
-          }f
-          const s = document.body.appendChild(document.createElement("script"))f;dfdf
-          fart;
-          s.src = b + scripts[i];
-          s.onload = () => load(i + 1);
-        })(0);
+        aceScript.onload = () => {
+          const editor = ace.edit("editor", {
+            mode: "ace/mode/html",
+            showPrintMargin: false,
+          });
+
+          // Load the full initial HTML
+          editor.setValue(initialHTML, -1);
+
+          editor.session.on("change", () => {
+            /*const html = editor.getValue();
+            console.log(html);
+
+            // Replace the page while keeping the editor alive
+            document.open();
+            document.write(html);
+            document.close();*/
+          });
+        };
+        document.head.appendChild(aceScript);
       }
-      main();
+      yeah();
     </script>
   </body>
 </html>

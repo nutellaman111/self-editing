@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Monaco HTML Live Preview with Linting</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        display: flex;
+      }
+      #editor {
+        width: 50%;
+        height: 100%;
+      }
+      #preview {
+        width: 50%;
+        height: 100%;
+        border-left: 1px solid #444;
+        padding: 0;
+        margin: 0;
+      }
+      #errors {
+        position: absolute;
+        top: 0;
+        left: 0;
+        color: red;
+        font-family: monospace;
+        background: #111;
+        padding: 5px;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <iframe id="preview"></iframe>
+    <div id="errors"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmlhint@latest/dist/htmlhint.js"></script>
+
+    <script>
+      require.config({
+        paths: {
+          vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs",
+        },
+      });
+      require(["vs/editor/editor.main"], function () {
+        const editor = monaco.editor.create(document.getElementById("editor"), {
+          value: `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <div>Unclosed div
+</body>
+</html>`,
+          language: "html",
+          theme: "vs-dark",
+          automaticLayout: true,
+        });
+
+        const errorsDiv = document.getElementById("errors");
+        const preview = document.getElementById("preview");
+
+        function update() {
+          const code = editor.getValue();
+          const results = HTMLHint.verify(code);
+
+          if (results.length > 0) {
+            // Show errors
+            errorsDiv.innerHTML = results
+              .map((r) => `Line ${r.line}, Col ${r.col}: ${r.message}`)
+              .join("<br>");
+            // Optional: highlight error lines in editor
+            const markers = results.map((err) => ({
+              severity: monaco.MarkerSeverity.Error,
+              message: err.message,
+              startLineNumber: err.line,
+              startColumn: err.col,
+              endLineNumber: err.line,
+              endColumn: err.col + 1,
+            }));
+            monaco.editor.setModelMarkers(
+              editor.getModel(),
+              "html-lint",
+              markers
+            );
+          } else {
+            errorsDiv.innerHTML = "";
+            monaco.editor.setModelMarkers(editor.getModel(), "html-lint", []);
+            // Update preview only if no errors
+            preview.srcdoc = code;
+          }
+        }
+
+        editor.onDidChangeModelContent(update);
+        update(); // initial run
+      });
+    </script>
+  </body>
+</html>
