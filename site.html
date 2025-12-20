@@ -15,27 +15,56 @@
     </style>
   </head>
   <body>
-    <h1>Hello World</h1>
-    <p>Edit this text and see it update live.</p>
-
+    <h1>hi</h1>
     <div id="editor"></div>
 
     <script>
-      const aceScript = document.createElement("script");
-      aceScript.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js";
-      aceScript.async = true; // optional but recommended
+      function yeah() {
+        console.log("yeah");
+        let initialHTML = document.documentElement.outerHTML;
 
-      aceScript.onload = () => {
-        console.log("meow"); // this should run when Ace loads
-        // You can safely use ace here
-      };
+        const aceScript = document.createElement("script");
+        aceScript.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js";
 
-      aceScript.onerror = () => {
-        console.error("Failed to load Ace script");
-      };
+        aceScript.onload = () => {
+          const editor = ace.edit("editor", {
+            mode: "ace/mode/html",
+            showPrintMargin: false,
+          });
 
-      document.head.appendChild(aceScript);
+          // Load the full initial HTML
+          editor.setValue(initialHTML, -1);
+
+          const Range = ace.require("ace/range").Range;
+          const start = parseInt(localStorage.getItem("cursorStart"), 10) || 0;
+          const end = parseInt(localStorage.getItem("cursorEnd"), 10) || 0;
+          const posStart = editor.session.doc.indexToPosition(start, 0);
+          const posEnd = editor.session.doc.indexToPosition(end, 0);
+          editor.selection.setRange(
+            new Range(posStart.row, posStart.column, posEnd.row, posEnd.column)
+          );
+          editor.focus();
+
+          editor.session.on("change", () => {
+            const sel = editor.selection.getRange();
+            const start = editor.session.doc.positionToIndex(sel.start, 0);
+            const end = editor.session.doc.positionToIndex(sel.end, 0);
+            localStorage.setItem("cursorStart", start);
+            localStorage.setItem("cursorEnd", end);
+
+            const html = editor.getValue();
+            console.log(html);
+
+            // Replace the page while keeping the editor alive
+            document.open();
+            document.write(html);
+            document.close();
+          });
+        };
+        document.head.appendChild(aceScript);
+      }
+      yeah();
     </script>
   </body>
 </html>
