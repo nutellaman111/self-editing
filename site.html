@@ -36,23 +36,7 @@
           // Load the full initial HTML
           editor.setValue(initialHTML, -1);
 
-          const Range = ace.require("ace/range").Range;
-          const start = parseInt(localStorage.getItem("cursorStart"), 10) || 0;
-          const end = parseInt(localStorage.getItem("cursorEnd"), 10) || 0;
-          const posStart = editor.session.doc.indexToPosition(start, 0);
-          const posEnd = editor.session.doc.indexToPosition(end, 0);
-          editor.selection.setRange(
-            new Range(posStart.row, posStart.column, posEnd.row, posEnd.column)
-          );
-          editor.focus();
-
           editor.session.on("change", () => {
-            const sel = editor.selection.getRange();
-            const start = editor.session.doc.positionToIndex(sel.start, 0);
-            const end = editor.session.doc.positionToIndex(sel.end, 0);
-            localStorage.setItem("cursorStart", start);
-            localStorage.setItem("cursorEnd", end);
-
             const html = editor.getValue();
             console.log(html);
 
