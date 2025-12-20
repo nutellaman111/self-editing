@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Self-Editing Site</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: monospace;
+      }
+      textarea {
+        width: 100%;
+        height: 80vh;
+        box-sizing: border-box;
+        background: #111;
+        color: #eee;
+        border: none;
+        padding: 12px;
+        resize: none;
+      }
+      button {
+        width: 100%;
+        height: 20vh;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="editor"></textarea>
+    <button onclick="apply()">Apply</button>
+
+    <script>
+      function onLoad() {
+        const editor = document.getElementById("editor");
+        editor.value = document.documentElement.outerHTML;
+        editor.addEventListener("input", () => {
+          /*apply();*/
+        });
+        const start = parseInt(localStorage.getItem("cursorStart"), 10) || 0;
+        const end = parseInt(localStorage.getItem("cursorEnd"), 10) || 0;
+        editor.focus();
+        editor.setSelectionRange(start, end);
+      }
+
+      onLoad();
+
+      // load own source
+
+      function apply() {
+        const editor = document.getElementById("editor");
+        localStorage.setItem("cursorStart", editor.selectionStart);
+        localStorage.setItem("cursorEnd", editor.selectionEnd);
+        const html = editor.value;
+        document.open();
+        document.write(html);
+        document.close();
+      }
+    </script>
+  </body>
+</html>
