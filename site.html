@@ -5,29 +5,50 @@
     <title>Self-Editing Page</title>
     <style>
       html,
-      body,
-      #editor {
+      body {
         margin: 0;
         height: 100%;
         width: 100%;
+      }
+
+      #editor {
+        height: 100%;
+        width: 100%;
         font-size: 1.25rem;
+      }
+
+      #updateBarContainer {
+        position: sticky;
+        width: 100%;
+        height: 50px;
+        background: #333;
+        color: #fff;
+        font-family: monospace;
+        display: flex;
+        align-items: center;
+        z-index: 100;
+      }
+
+      #updateBar {
+        height: 100%;
+        width: 0;
+        background: #4caf50;
+        transition: width 0.1s linear;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     </style>
     <link rel="stylesheet" href="ace.css" />
   </head>
   <body>
-    <h1>hi</h1>
+    <div id="updateBarContainer">
+      <div id="updateBar">Updating in 0.0s</div>
+    </div>
     <div id="editor"></div>
 
     <script>
-      function isValidHTML(html) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        return !doc.querySelector("parsererror");
-      }
       function yeah() {
-        console.log("yeah");
-        let edited = false;
         let initialHTML = document.documentElement.outerHTML;
 
         const aceScript = document.createElement("script");
@@ -40,35 +61,50 @@
             showPrintMargin: false,
           });
 
-          // Load the full initial HTML
           editor.setValue(initialHTML, -1);
 
+          const bar = document.getElementById("updateBar");
+          let timer = null;
+          const fillTime = 2.0; // seconds to fill
+
           editor.session.on("change", () => {
-            edited = true;
-          });
-
-          editor.getSession().on("changeAnnotation", () => {
-            const annotations = editor.getSession().getAnnotations();
-            const hasErrors = annotations.some((a) => a.type === "error");
-
-            const html = editor.getValue();
-            let isValid = isValidHTML(html);
-
-            if (!hasErrors && isValid && edited) {
-              // Replace the page while keeping the editor alive
-              console.log("writing html");
-              document.open();
-              document.write(html);
-              document.close();
+            if (timer) {
+              clearInterval(timer);
             }
-          });
 
-          console.log("no errors");
-          /*
-           */
+            let elapsed = 0;
+            bar.style.width = "0%";
+
+            timer = setInterval(() => {
+              elapsed += 0.05; // interval step
+              const pct = Math.min(elapsed / fillTime, 1) * 100;
+              bar.style.width = pct + "%";
+              bar.textContent = `Updating in ${(fillTime - elapsed).toFixed(
+                1
+              )}s`;
+
+              if (elapsed >= fillTime) {
+                clearInterval(timer);
+                const html = editor.getSession().getValue();
+
+                // play ding
+                const audio = new Audio(
+                  "https://www.soundjay.com/buttons/sounds/button-3.mp3"
+                );
+                audio.play();
+
+                // update page
+                document.open();
+                document.write(html);
+                document.close();
+              }
+            }, 50);
+          });
         };
+
         document.head.appendChild(aceScript);
       }
+
       yeah();
     </script>
   </body>
