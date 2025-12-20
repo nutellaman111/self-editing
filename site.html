@@ -20,8 +20,14 @@
     <div id="editor"></div>
 
     <script>
+      function isValidHTML(html) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        return !doc.querySelector("parsererror");
+      }
       function yeah() {
         console.log("yeah");
+        let edited = false;
         let initialHTML = document.documentElement.outerHTML;
 
         const aceScript = document.createElement("script");
@@ -38,14 +44,28 @@
           editor.setValue(initialHTML, -1);
 
           editor.session.on("change", () => {
-            /*const html = editor.getValue();
-            console.log(html);
-
-            // Replace the page while keeping the editor alive
-            document.open();
-            document.write(html);
-            document.close();*/
+            edited = true;
           });
+
+          editor.getSession().on("changeAnnotation", () => {
+            const annotations = editor.getSession().getAnnotations();
+            const hasErrors = annotations.some((a) => a.type === "error");
+
+            const html = editor.getValue();
+            let isValid = isValidHTML(html);
+
+            if (!hasErrors && isValid && edited) {
+              // Replace the page while keeping the editor alive
+              console.log("writing html");
+              document.open();
+              document.write(html);
+              document.close();
+            }
+          });
+
+          console.log("no errors");
+          /*
+           */
         };
         document.head.appendChild(aceScript);
       }
