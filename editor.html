@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+  <head>
+    <style>
+      html,
+      body,
+      #editor {
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        font-size: 1.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js"></script>
+    <script>
+      const editor = ace.edit("editor", {
+        mode: "ace/mode/html",
+        showPrintMargin: false,
+      });
+    </script>
+  </body>
+</html>
