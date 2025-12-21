@@ -34,7 +34,7 @@
         Object.assign(document.getElementById("editor").style, {
           height: "100%",
           width: "100%",
-          fontSize: "2.5vh",
+          fontSize: "1rem",
         });
 
         Object.assign(document.getElementById("floatingPanel").style, {
@@ -84,8 +84,8 @@
       function yeah() {
         let cursorPos = 0;
         let scrollPos = 0;
-        let panelTop = 5;
-        let panelLeft = 50; // start on the right
+        let panelTop = 20;
+        let panelLeft = window.innerWidth / 2; // 50px from right
         let initialHTML = document.documentElement.outerHTML;
         let changesMade = false;
 
@@ -102,22 +102,19 @@
           });
 
           editor.setValue(initialHTML, -1);
-          /*editor.focus();*/
           editor.moveCursorToPosition(
             editor.session.doc.indexToPosition(cursorPos, 0)
           );
+          editor.focus();
 
           const applyBtn = document.getElementById("applyBtn");
           const floatingPanel = document.getElementById("floatingPanel");
 
-          floatingPanel.style.top = panelTop + "vh";
-          floatingPanel.style.left = panelLeft + "vw";
+          floatingPanel.style.top = panelTop + "px";
+          floatingPanel.style.left = panelLeft + "px";
 
           setTimeout(() => {
-            const maxScroll =
-              editor.session.getScreenLength() * editor.renderer.lineHeight -
-              editor.renderer.$size.scrollerHeight;
-            editor.session.setScrollTop(scrollPos * maxScroll);
+            editor.session.setScrollTop(scrollPos);
           }, 0);
 
           function makeDraggable(el) {
@@ -163,19 +160,16 @@
             applyBtn.style.cursor = "pointer";
 
             if (!previewIframe) {
-              // get current viewport aspect ratio
               const aspectRatio = window.innerHeight / window.innerWidth;
 
-              // create dummy element with same aspect ratio
               const dummy = document.createElement("div");
               Object.assign(dummy.style, {
                 width: "100%",
-                paddingTop: `${aspectRatio * 100}%`, // height = aspect ratio * width
+                paddingTop: `${aspectRatio * 100}%`,
                 position: "relative",
               });
               floatingPanel.appendChild(dummy);
 
-              // create iframe sized as full viewport
               previewIframe = document.createElement("iframe");
               Object.assign(previewIframe.style, {
                 position: "absolute",
@@ -187,7 +181,6 @@
                 background: "white",
               });
 
-              // scale iframe to fit dummy
               const scaleX = dummy.clientWidth / window.innerWidth;
               const scaleY = dummy.clientHeight / window.innerHeight;
               const scale = Math.min(scaleX, scaleY);
@@ -196,8 +189,11 @@
               dummy.appendChild(previewIframe);
             }
 
-            // update preview content live
             previewIframe.srcdoc = getModifiedHtml();
+
+            previewIframe.onload = () => {
+              editor.focus();
+            };
           }
 
           applyBtn.addEventListener("click", () => {
@@ -211,18 +207,15 @@
           });
 
           function getModifiedHtml() {
-            // normalized 0..1
-            let scrollTop = editor.session.getScrollTop();
-            let maxScroll =
-              editor.session.getScreenLength() * editor.renderer.lineHeight -
-              editor.renderer.$size.scrollerHeight;
-            console.log("max scroll modify = " + maxScroll);
+            cursorPos = editor.session.doc.positionToIndex(
+              editor.getCursorPosition(),
+              0
+            );
 
-            scrollPos = scrollTop / maxScroll;
-            console.log(scrollPos);
+            scrollPos = editor.session.getScrollTop();
 
-            panelTop = (floatingPanel.offsetTop / window.innerHeight) * 100;
-            panelLeft = (floatingPanel.offsetLeft / window.innerWidth) * 100;
+            panelTop = floatingPanel.offsetTop;
+            panelLeft = floatingPanel.offsetLeft;
 
             return replaceVariablesInHTML(editor.getSession().getValue(), [
               { name: "cursorPos", value: cursorPos },
