@@ -5,6 +5,9 @@
     <link rel="stylesheet" href="ace.css" />
     <!--https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css-->
     <style>
+      /*∘₊✧─────────❤️CSS❤️─────────✧₊∘*/
+
+      /*page and code editor*/
       html,
       body,
       #editor {
@@ -14,6 +17,7 @@
         font-size: 1rem;
       }
 
+      /*the floating panel and the stuff inside it*/
       #floatingPanel {
         position: fixed;
         top: -100%;
@@ -30,21 +34,20 @@
         user-select: none;
       }
 
-      #applyBtn {
-        padding: 5px 10px;
-        cursor: not-allowed;
-        background: #555;
-      }
-
       #grip {
-        width: 16px;
+        width: 16px; /*this is the little dots icon thing*/
         height: 16px;
         margin: 0 auto;
         user-select: none;
         pointer-events: none;
       }
 
-      /* Optional: preview iframe scaling container */
+      #applyBtn {
+        padding: 5px 10px;
+        cursor: not-allowed;
+        background: #555;
+      }
+
       .previewDummy {
         width: 100%;
         position: relative;
@@ -62,6 +65,7 @@
     </style>
   </head>
   <body>
+    <!--*∘₊✧>─────────❤️BODY❤️─────────✧₊∘*-->
     <div id="editor"></div>
 
     <div id="floatingPanel">
@@ -74,151 +78,192 @@
     </div>
 
     <script>
-      function replaceVariablesInHTML(html, replacements) {
-        replacements.forEach(({ name, value }) => {
-          const regex = new RegExp(`let\\s+${name}\\s*=\\s*[^;]*;`);
-          html = html.replace(regex, `let ${name} = ${value};`);
-        });
-        return html;
-      }
+      //*∘₊✧>─────────❤️SCRIPT❤️─────────✧₊∘*
 
-      function yeah() {
-        let cursorPos = 0;
+      LETSGO(); //all variables have to be defined inside some function or everything breaks
+      async function LETSGO() {
+        let cursorPos = 0; //some of these declarations get modified, ill explain later make a mental note!!!!
         let scrollPos = 0;
-        let panelTop = 20;
+        let panelTop = window.innerHeight * 0.4;
         let autoFocus = true;
-        let panelLeft = window.innerWidth / 2; // 50px from right
-        let initialHTML = document.documentElement.outerHTML;
+        let panelLeft = window.innerWidth * 0.65;
         let changesMade = false;
 
-        const aceScript = document.createElement("script");
-        aceScript.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js";
+        //capture the page's html before scripts modify it
 
-        const aceScript2 = document.createElement("script");
-        aceScript2.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/theme-ambiance.min.js";
+        let initialHTML = document.documentElement.outerHTML;
 
-        aceScript.onload = () => {
-          const editor = ace.edit("editor", {
-            mode: "ace/mode/html",
-            showPrintMargin: false,
-            theme: "ambiance",
-            value: initialHTML,
-          });
-          editor.moveCursorToPosition(
-            editor.session.doc.indexToPosition(cursorPos, 0)
+        //load "ace" code editor from cdn and put the html inside
+
+        await loadScripts([
+          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js",
+          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/theme-ambiance.min.js",
+        ]);
+
+        const editor = ace.edit("editor", {
+          mode: "ace/mode/html",
+          showPrintMargin: false,
+          theme: "ambiance",
+          value: initialHTML,
+        });
+
+        //restore scrollbar and cursor positions from last render
+
+        editor.moveCursorToPosition(
+          editor.session.doc.indexToPosition(cursorPos, 0)
+        );
+        if (autoFocus) editor.focus();
+
+        setTimeout(() => {
+          editor.session.setScrollTop(scrollPos);
+        }, 0);
+
+        //whenever the code gets edited the preview is updated
+
+        editor.session.on("change", () => {
+          updatePreview();
+        });
+
+        //initialise the floating draggable pannel
+
+        const floatingPanel = document.getElementById("floatingPanel");
+        floatingPanel.style.top = panelTop + "px";
+        floatingPanel.style.left = panelLeft + "px";
+        makePanelDraggable(floatingPanel);
+
+        //when the "apply changes" button is clicked:
+
+        //the html of the entire page really does get replaced with what you have written down in the code editor
+
+        document.getElementById("applyBtn").addEventListener("click", () => {
+          let newHtml = getHtmlFromEditorAndApplyPatches();
+          document.open();
+          document.write(newHtml);
+          document.close();
+        });
+
+        //create an iframe preview of what the page will look like if "apply" is pressed
+
+        //the timeout thing makes the iframe not update every 0.00000001 seconds
+
+        let previewIframe = null;
+        let editTimeout;
+        function updatePreview() {
+          clearTimeout(editTimeout);
+          editTimeout = setTimeout(
+            () => {
+              changesMade = true;
+              applyBtn.disabled = false;
+              applyBtn.style.background = "";
+              applyBtn.style.cursor = "pointer";
+
+              if (!previewIframe) {
+                const aspectRatio = window.innerHeight / window.innerWidth;
+
+                //the iframe is rendered at screen resolution then shrinked down with css.
+
+                //the html layout doesnt account for transformations, so what i do is -
+
+                //1. render a dummy element to reserve space in the layout,
+
+                //2. position the iframe on top of it
+
+                const dummy = document.createElement("div");
+                dummy.className = "previewDummy";
+                dummy.style.paddingTop = `${aspectRatio * 100}%`;
+                floatingPanel.appendChild(dummy);
+
+                previewIframe = document.createElement("iframe");
+                previewIframe.className = "previewIframe";
+
+                const scaleX = dummy.clientWidth / window.innerWidth;
+                const scaleY = dummy.clientHeight / window.innerHeight;
+                const scale = Math.min(scaleX, scaleY);
+                previewIframe.style.transform = `scale(${scale})`;
+
+                dummy.appendChild(previewIframe);
+              }
+
+              previewIframe.srcdoc = getHtmlFromEditorAndApplyPatches(false);
+            },
+            previewIframe ? 500 : 0
           );
-          if (autoFocus) editor.focus();
+        }
 
-          const applyBtn = document.getElementById("applyBtn");
-          const floatingPanel = document.getElementById("floatingPanel");
+        //this function gets whatever is written down in the code editor and returns it after making some patches......
 
-          floatingPanel.style.top = panelTop + "px";
-          floatingPanel.style.left = panelLeft + "px";
+        //ok so like normally when u replace a page's entire html, things like cursor position get reset.
 
-          setTimeout(() => {
-            editor.session.setScrollTop(scrollPos);
-          }, 0);
+        //which is annoying.
 
-          function makeDraggable(el) {
-            let offsetX = 0,
-              offsetY = 0,
-              dragging = false;
+        //so we have to somehow tell the next version of the page where the cursor and stuff were.
 
-            el.addEventListener("mousedown", (e) => {
-              dragging = true;
-              offsetX = e.clientX - el.offsetLeft;
-              offsetY = e.clientY - el.offsetTop;
-              el.style.cursor = "grabbing";
-            });
+        //we do that by patching the variable declarations i told u to remember from before.
 
-            document.addEventListener("mouseup", () => {
-              dragging = false;
-              el.style.cursor = "grab";
-            });
+        //for example "let cursorPos = 0;" turns into "let cursorPos = 67;"
 
-            document.addEventListener("mousemove", (e) => {
-              if (!dragging) return;
-              el.style.left = e.clientX - offsetX + "px";
-              el.style.top = e.clientY - offsetY + "px";
-            });
-          }
-          makeDraggable(floatingPanel);
+        function getHtmlFromEditorAndApplyPatches(autoFocus = true) {
+          return replaceVariablesInHTML(editor.getSession().getValue(), [
+            {
+              name: "cursorPos",
+              value: editor.session.doc.positionToIndex(
+                editor.getCursorPosition(),
+                0
+              ),
+            },
+            { name: "autoFocus", value: autoFocus },
+            { name: "scrollPos", value: editor.session.getScrollTop() },
+            { name: "panelTop", value: floatingPanel.offsetTop },
+            { name: "panelLeft", value: floatingPanel.offsetLeft },
+          ]);
+        }
 
-          let previewIframe = null;
-
-          editor.session.on("change", () => {
-            onEdit();
+        function replaceVariablesInHTML(html, replacements) {
+          replacements.forEach(({ name, value }) => {
+            const regex = new RegExp(`let\\s+${name}\\s*=\\s*[^;]*;`);
+            html = html.replace(regex, `let ${name} = ${value};`);
           });
-
-          let editTimeout;
-          function onEdit() {
-            clearTimeout(editTimeout);
-            editTimeout = setTimeout(
-              () => {
-                changesMade = true;
-                applyBtn.disabled = false;
-                applyBtn.style.background = "";
-                applyBtn.style.cursor = "pointer";
-
-                if (!previewIframe) {
-                  const aspectRatio = window.innerHeight / window.innerWidth;
-
-                  const dummy = document.createElement("div");
-                  dummy.className = "previewDummy";
-                  dummy.style.paddingTop = `${aspectRatio * 100}%`;
-                  floatingPanel.appendChild(dummy);
-
-                  previewIframe = document.createElement("iframe");
-                  previewIframe.className = "previewIframe";
-
-                  const scaleX = dummy.clientWidth / window.innerWidth;
-                  const scaleY = dummy.clientHeight / window.innerHeight;
-                  const scale = Math.min(scaleX, scaleY);
-                  previewIframe.style.transform = `scale(${scale})`;
-
-                  dummy.appendChild(previewIframe);
-                }
-
-                previewIframe.srcdoc = getModifiedHtml(false);
-              },
-              previewIframe ? 500 : 0
-            );
-          }
-
-          applyBtn.addEventListener("click", () => {
-            if (!changesMade) return;
-
-            let newHtml = getModifiedHtml();
-
-            document.open();
-            document.write(newHtml);
-            document.close();
-          });
-
-          function getModifiedHtml(autoFocus = true) {
-            return replaceVariablesInHTML(editor.getSession().getValue(), [
-              {
-                name: "cursorPos",
-                value: editor.session.doc.positionToIndex(
-                  editor.getCursorPosition(),
-                  0
-                ),
-              },
-              { name: "autoFocus", value: autoFocus },
-              { name: "scrollPos", value: editor.session.getScrollTop() },
-              { name: "panelTop", value: floatingPanel.offsetTop },
-              { name: "panelLeft", value: floatingPanel.offsetLeft },
-            ]);
-          }
-        };
-
-        document.head.appendChild(aceScript);
-        document.head.appendChild(aceScript2);
+          return html;
+        }
       }
 
-      yeah();
+      //some helper functions
+
+      function makePanelDraggable(el) {
+        let offsetX = 0,
+          offsetY = 0,
+          dragging = false;
+
+        el.addEventListener("mousedown", (e) => {
+          dragging = true;
+          offsetX = e.clientX - el.offsetLeft;
+          offsetY = e.clientY - el.offsetTop;
+          el.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mouseup", () => {
+          dragging = false;
+          el.style.cursor = "grab";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!dragging) return;
+          el.style.left = e.clientX - offsetX + "px";
+          el.style.top = e.clientY - offsetY + "px";
+        });
+      }
+      async function loadScripts(urls) {
+        for (const url of urls) {
+          await new Promise((res, rej) => {
+            const s = document.createElement("script");
+            s.src = url;
+            s.async = false;
+            s.onload = res;
+            s.onerror = () => rej(`Failed: ${url}`);
+            document.head.appendChild(s);
+          });
+        }
+      }
     </script>
   </body>
 </html>
