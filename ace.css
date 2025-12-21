@@ -1,6 +1,6 @@
 .ace_comment {
-  color: rgb(195, 71, 233);
-  font-family: "Comic Sans MS", cursive, sans-serif;
+  color: rgb(195, 71, 233) !important;
+  font-family: "Comic Sans MS", cursive, sans-serif !important;
 }
 
 .error_widget_wrapper {
