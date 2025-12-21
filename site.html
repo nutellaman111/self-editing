@@ -1,31 +1,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Self-Editing Page</title>
+    <title>Most Open Source Website Ever</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css"
     />
     <style>
-      /*∘₊✧─────────❤️CSS❤️─────────✧₊∘*/
+      /*∘₊✧──────────────────❤️CSS❤️──────────────────✧₊∘*/
 
-      /*page and code editor*/
+      /* ➽───❥ page and code editor*/
       html,
       body,
       #editor {
         margin: 0;
         height: 100%;
         width: 100%;
-        font-size: 1rem;
+        background: #202020;
+        font-family: monospace;
+        display: flex;
+        flex-direction: column;
       }
 
-      /*the floating panel and the stuff inside it*/
+      /* ➽───❥ the floating panel and the stuff inside it*/
       #floatingPanel {
-        position: fixed;
+        position: fixed; /*panel itself*/
         top: -100%;
         left: -100%;
         width: 30%;
-        background: gray;
+        background: #3d3d3d;
         padding: 20px;
         border-radius: 8px;
         z-index: 1000;
@@ -34,40 +37,52 @@
         flex-direction: column;
         gap: 10px;
         user-select: none;
+        color: white;
       }
 
       #grip {
-        width: 16px; /*this is the little dots icon thing*/
+        width: 16px; /*the ⠿ thing on the panel*/
         height: 16px;
         margin: 0 auto;
-        user-select: none;
         pointer-events: none;
       }
 
       #applyBtn {
-        padding: 5px 10px;
+        padding: 5px 10px; /*button*/
+        cursor: pointer;
+        background: #323232;
+        color: white;
+        font-family: inherit;
+      }
+      #applyBtn:disabled {
         cursor: not-allowed;
-        background: #555;
+        background: #464646;
+        color: rgb(45, 45, 45);
       }
 
       .previewDummy {
-        width: 100%;
+        width: 100%; /*dummy element that reserves space for the preview */
         position: relative;
       }
 
       .previewIframe {
-        position: absolute;
+        position: absolute; /*actual preview*/
+        box-sizing: border-box;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
         transform-origin: 0 0;
-        background: white;
+        background: #202020;
+        border-width: 10px;
+        border-style: inset;
+        border-color: #7a7a7a #777 #777 #7a7a7a;
       }
     </style>
   </head>
   <body>
-    <!--*∘₊✧>─────────❤️BODY❤️─────────✧₊∘*-->
+    <!-- *∘₊✧>──────────────────❤️BODY❤️──────────────────✧₊∘* -->
+    <h1>meow</h1>
     <div id="editor"></div>
 
     <div id="floatingPanel">
@@ -75,27 +90,29 @@
         id="grip"
         src="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/grip.svg"
       />
-      <button id="applyBtn" disabled="">Apply Changes</button>
+      <button id="applyBtn" disabled="">
+        Apply Changes (Shortcut: CTRL+S)
+      </button>
       preview:
     </div>
 
     <script>
-      //*∘₊✧>─────────❤️SCRIPT❤️─────────✧₊∘*
+      // *∘₊✧>──────────────────❤️SCRIPT❤️──────────────────✧₊∘*
 
-      LETSGO(); //all variables have to be defined inside some function or everything breaks
+      LETSGO(); // all variables have to be defined inside some function or everything breaks
       async function LETSGO() {
-        let cursorPos = 0; //some of these declarations get modified, ill explain later make a mental note!!!!
+        let cursorPos = 0; // some of these declarations get modified, ill explain later make a mental note!!!!
         let scrollPos = 0;
-        let panelTop = window.innerHeight * 0.4;
+        let panelTop = window.innerHeight * 0.1;
         let autoFocus = true;
-        let panelLeft = window.innerWidth * 0.65;
+        let panelLeft = window.innerWidth * 0.6;
         let changesMade = false;
 
-        //capture the page's html before scripts modify it
+        // ➽───❥ capture the page's html before scripts modify it
 
         let initialHTML = document.documentElement.outerHTML;
 
-        //load "ace" code editor from cdn and put the html inside
+        // ➽───❥ load "ace" code editor from cdn and put the html inside
 
         await loadScripts([
           "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js",
@@ -105,11 +122,11 @@
         const editor = ace.edit("editor", {
           mode: "ace/mode/html",
           showPrintMargin: false,
-          theme: "ambiance",
+          theme: "ace/theme/ambiance",
           value: initialHTML,
         });
 
-        //restore scrollbar and cursor positions from last render
+        // ➽───❥ restore scrollbar and cursor positions from last render
 
         editor.moveCursorToPosition(
           editor.session.doc.indexToPosition(cursorPos, 0)
@@ -120,33 +137,42 @@
           editor.session.setScrollTop(scrollPos);
         }, 0);
 
-        //whenever the code gets edited the preview is updated
+        // ➽───❥ whenever the code gets edited the preview is updated
 
         editor.session.on("change", () => {
           updatePreview();
         });
 
-        //initialise the floating draggable pannel
+        // ➽───❥ initialise the floating draggable pannel
 
         const floatingPanel = document.getElementById("floatingPanel");
         floatingPanel.style.top = panelTop + "px";
         floatingPanel.style.left = panelLeft + "px";
         makePanelDraggable(floatingPanel);
 
-        //when the "apply changes" button is clicked:
+        // ➽───❥ when the "apply changes" button is pressed (or ctrl+enter):
+        //        the html of the entire page really does get replaced with what you have written down in the code editor
 
-        //the html of the entire page really does get replaced with what you have written down in the code editor
-
-        document.getElementById("applyBtn").addEventListener("click", () => {
+        const applyChanges = () => {
           let newHtml = getHtmlFromEditorAndApplyPatches();
           document.open();
           document.write(newHtml);
           document.close();
+        };
+
+        document
+          .getElementById("applyBtn")
+          .addEventListener("click", applyChanges);
+
+        document.addEventListener("keydown", (e) => {
+          if (e.ctrlKey && e.key.toLowerCase() === "s") {
+            e.preventDefault();
+            applyChanges();
+          }
         });
 
-        //create an iframe preview of what the page will look like if "apply" is pressed
-
-        //the timeout thing makes the iframe not update every 0.00000001 seconds
+        // ➽───❥ create an iframe preview of what the page will look like if "apply" is pressed.
+        //        the timeout thing makes the iframe not update every 0.00000001 seconds
 
         let previewIframe = null;
         let editTimeout;
@@ -156,19 +182,14 @@
             () => {
               changesMade = true;
               applyBtn.disabled = false;
-              applyBtn.style.background = "";
-              applyBtn.style.cursor = "pointer";
 
               if (!previewIframe) {
                 const aspectRatio = window.innerHeight / window.innerWidth;
 
-                //the iframe is rendered at screen resolution then shrinked down with css.
-
-                //the html layout doesnt account for transformations, so what i do is -
-
-                //1. render a dummy element to reserve space in the layout,
-
-                //2. position the iframe on top of it
+                // ➽───❥ the iframe is rendered at screen resolution then shrinked down with css.
+                // the html layout doesnt account for transformations, so what i do is -
+                // 1. render a dummy element to reserve space in the layout,
+                // 2. position the iframe on top of it
 
                 const dummy = document.createElement("div");
                 dummy.className = "previewDummy";
@@ -192,17 +213,12 @@
           );
         }
 
-        //this function gets whatever is written down in the code editor and returns it after making some patches......
-
-        //ok so like normally when u replace a page's entire html, things like cursor position get reset.
-
-        //which is annoying.
-
-        //so we have to somehow tell the next version of the page where the cursor and stuff were.
-
-        //we do that by patching the variable declarations i told u to remember from before.
-
-        //for example "let cursorPos = 0;" turns into "let cursorPos = 67;"
+        // ➽───❥ this function gets whatever is written down in the code editor and returns it after making some patches......
+        //        ok so like normally when u replace some page's entire html, things like cursor position get reset.
+        //        which is annoying.
+        //        so we have to somehow tell the next version of the page where the cursor and stuff were.
+        //        we do that by patching the variable declarations i told u to remember from before.
+        //        for example "let cursorPos = 0;" turns into "let cursorPos = 67;"
 
         function getHtmlFromEditorAndApplyPatches(autoFocus = true) {
           return replaceVariablesInHTML(editor.getSession().getValue(), [
@@ -229,7 +245,7 @@
         }
       }
 
-      //some helper functions
+      // some helper functions
 
       function makePanelDraggable(el) {
         let offsetX = 0,
@@ -261,7 +277,6 @@
             s.src = url;
             s.async = false;
             s.onload = res;
-            s.onerror = () => rej(`Failed: ${url}`);
             document.head.appendChild(s);
           });
         }
