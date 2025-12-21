@@ -85,6 +85,7 @@
         let cursorPos = 0;
         let scrollPos = 0;
         let panelTop = 20;
+        let autoFocus = true;
         let panelLeft = window.innerWidth / 2; // 50px from right
         let initialHTML = document.documentElement.outerHTML;
         let changesMade = false;
@@ -105,7 +106,9 @@
           editor.moveCursorToPosition(
             editor.session.doc.indexToPosition(cursorPos, 0)
           );
-          editor.focus();
+          if (autoFocus) {
+            editor.focus();
+          }
 
           const applyBtn = document.getElementById("applyBtn");
           const floatingPanel = document.getElementById("floatingPanel");
@@ -189,11 +192,7 @@
               dummy.appendChild(previewIframe);
             }
 
-            previewIframe.srcdoc = getModifiedHtml();
-
-            previewIframe.onload = () => {
-              editor.focus();
-            };
+            previewIframe.srcdoc = getModifiedHtml(false);
           }
 
           applyBtn.addEventListener("click", () => {
@@ -206,22 +205,19 @@
             document.close();
           });
 
-          function getModifiedHtml() {
-            cursorPos = editor.session.doc.positionToIndex(
-              editor.getCursorPosition(),
-              0
-            );
-
-            scrollPos = editor.session.getScrollTop();
-
-            panelTop = floatingPanel.offsetTop;
-            panelLeft = floatingPanel.offsetLeft;
-
+          function getModifiedHtml(autoFocus = true) {
             return replaceVariablesInHTML(editor.getSession().getValue(), [
-              { name: "cursorPos", value: cursorPos },
-              { name: "scrollPos", value: scrollPos },
-              { name: "panelTop", value: panelTop },
-              { name: "panelLeft", value: panelLeft },
+              {
+                name: "cursorPos",
+                value: editor.session.doc.positionToIndex(
+                  editor.getCursorPosition(),
+                  0
+                ),
+              },
+              { name: "autoFocus", value: autoFocus },
+              { name: "scrollPos", value: editor.session.getScrollTop() },
+              { name: "panelTop", value: floatingPanel.offsetTop },
+              { name: "panelLeft", value: floatingPanel.offsetLeft },
             ]);
           }
         };
