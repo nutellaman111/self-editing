@@ -2,10 +2,64 @@
   <head>
     <meta charset="UTF-8" />
     <title>Self-Editing Page</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css"
-    />
+    <link rel="stylesheet" href="ace.css" />
+    <!--https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css-->
+    <style>
+      html,
+      body,
+      #editor {
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        font-size: 1rem;
+      }
+
+      #floatingPanel {
+        position: fixed;
+        top: -100%;
+        left: -100%;
+        width: 30%;
+        background: gray;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 1000;
+        cursor: grab;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        user-select: none;
+      }
+
+      #applyBtn {
+        padding: 5px 10px;
+        cursor: not-allowed;
+        background: #555;
+      }
+
+      #grip {
+        width: 16px;
+        height: 16px;
+        margin: 0 auto;
+        user-select: none;
+        pointer-events: none;
+      }
+
+      /* Optional: preview iframe scaling container */
+      .previewDummy {
+        width: 100%;
+        position: relative;
+      }
+
+      .previewIframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        transform-origin: 0 0;
+        background: white;
+      }
+    </style>
   </head>
   <body>
     <div id="editor"></div>
@@ -20,57 +74,6 @@
     </div>
 
     <script>
-      function applyStyles() {
-        Object.assign(document.documentElement.style, {
-          height: "100%",
-        });
-
-        Object.assign(document.body.style, {
-          margin: "0",
-          height: "100%",
-        });
-
-        Object.assign(document.getElementById("editor").style, {
-          height: "100%",
-          fontSize: "1rem",
-        });
-
-        //❤️css for that floaty pannel with the prevuew and stuff ❤️
-        Object.assign(document.getElementById("floatingPanel").style, {
-          position: "fixed",
-          top: "-100%",
-          left: "-100%",
-          width: "30%",
-          background: "gray",
-          padding: "20px",
-          borderRadius: "8px",
-          zIndex: "1000",
-          cursor: "grab",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          userSelect: "none",
-        });
-
-        const applyBtn = document.getElementById("applyBtn");
-        Object.assign(applyBtn.style, {
-          padding: "5px 10px",
-          cursor: "pointer",
-        });
-        applyBtn.disabled = true;
-        applyBtn.style.background = "#555";
-        applyBtn.style.cursor = "not-allowed";
-
-        const grip = document.getElementById("grip");
-        Object.assign(grip.style, {
-          width: "16px",
-          height: "16px",
-          margin: "0 auto",
-          userSelect: "none",
-          pointerEvents: "none",
-        });
-      }
-
       function replaceVariablesInHTML(html, replacements) {
         replacements.forEach(({ name, value }) => {
           const regex = new RegExp(`let\\s+${name}\\s*=\\s*[^;]*;`);
@@ -88,17 +91,19 @@
         let initialHTML = document.documentElement.outerHTML;
         let changesMade = false;
 
-        applyStyles();
-
         const aceScript = document.createElement("script");
         aceScript.src =
           "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js";
+
+        const aceScript2 = document.createElement("script");
+        aceScript2.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/theme-ambiance.min.js";
 
         aceScript.onload = () => {
           const editor = ace.edit("editor", {
             mode: "ace/mode/html",
             showPrintMargin: false,
-            theme: null,
+            theme: "ambiance",
             value: initialHTML,
           });
           editor.moveCursorToPosition(
@@ -161,23 +166,12 @@
                   const aspectRatio = window.innerHeight / window.innerWidth;
 
                   const dummy = document.createElement("div");
-                  Object.assign(dummy.style, {
-                    width: "100%",
-                    paddingTop: `${aspectRatio * 100}%`,
-                    position: "relative",
-                  });
+                  dummy.className = "previewDummy";
+                  dummy.style.paddingTop = `${aspectRatio * 100}%`;
                   floatingPanel.appendChild(dummy);
 
                   previewIframe = document.createElement("iframe");
-                  Object.assign(previewIframe.style, {
-                    position: "absolute",
-                    top: "0",
-                    left: "0",
-                    width: "100vw",
-                    height: "100vh",
-                    transformOrigin: "0 0",
-                    background: "white",
-                  });
+                  previewIframe.className = "previewIframe";
 
                   const scaleX = dummy.clientWidth / window.innerWidth;
                   const scaleY = dummy.clientHeight / window.innerHeight;
@@ -221,6 +215,7 @@
         };
 
         document.head.appendChild(aceScript);
+        document.head.appendChild(aceScript2);
       }
 
       yeah();
