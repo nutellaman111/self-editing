@@ -41,8 +41,7 @@
           position: "fixed",
           top: "-100%",
           left: "-100%",
-          width: "40%",
-          height: "60%",
+          width: "30%",
           background: "gray",
           padding: "20px",
           borderRadius: "8px",
@@ -135,7 +134,6 @@
             document.addEventListener("mouseup", () => {
               dragging = false;
               el.style.cursor = "grab";
-              onEdit();
             });
 
             document.addEventListener("mousemove", (e) => {
@@ -152,47 +150,50 @@
             onEdit();
           });
 
-          editor.session.on("cursorChange", () => {
-            onEdit();
-          });
-
+          let editTimeout;
           function onEdit() {
-            changesMade = true;
-            applyBtn.disabled = false;
-            applyBtn.style.background = "";
-            applyBtn.style.cursor = "pointer";
+            clearTimeout(editTimeout);
+            editTimeout = setTimeout(
+              () => {
+                changesMade = true;
+                applyBtn.disabled = false;
+                applyBtn.style.background = "";
+                applyBtn.style.cursor = "pointer";
 
-            if (!previewIframe) {
-              const aspectRatio = window.innerHeight / window.innerWidth;
+                if (!previewIframe) {
+                  const aspectRatio = window.innerHeight / window.innerWidth;
 
-              const dummy = document.createElement("div");
-              Object.assign(dummy.style, {
-                width: "100%",
-                paddingTop: `${aspectRatio * 100}%`,
-                position: "relative",
-              });
-              floatingPanel.appendChild(dummy);
+                  const dummy = document.createElement("div");
+                  Object.assign(dummy.style, {
+                    width: "100%",
+                    paddingTop: `${aspectRatio * 100}%`,
+                    position: "relative",
+                  });
+                  floatingPanel.appendChild(dummy);
 
-              previewIframe = document.createElement("iframe");
-              Object.assign(previewIframe.style, {
-                position: "absolute",
-                top: "0",
-                left: "0",
-                width: "100vw",
-                height: "100vh",
-                transformOrigin: "0 0",
-                background: "white",
-              });
+                  previewIframe = document.createElement("iframe");
+                  Object.assign(previewIframe.style, {
+                    position: "absolute",
+                    top: "0",
+                    left: "0",
+                    width: "100vw",
+                    height: "100vh",
+                    transformOrigin: "0 0",
+                    background: "white",
+                  });
 
-              const scaleX = dummy.clientWidth / window.innerWidth;
-              const scaleY = dummy.clientHeight / window.innerHeight;
-              const scale = Math.min(scaleX, scaleY);
-              previewIframe.style.transform = `scale(${scale})`;
+                  const scaleX = dummy.clientWidth / window.innerWidth;
+                  const scaleY = dummy.clientHeight / window.innerHeight;
+                  const scale = Math.min(scaleX, scaleY);
+                  previewIframe.style.transform = `scale(${scale})`;
 
-              dummy.appendChild(previewIframe);
-            }
+                  dummy.appendChild(previewIframe);
+                }
 
-            previewIframe.srcdoc = getModifiedHtml(false);
+                previewIframe.srcdoc = getModifiedHtml(false);
+              },
+              previewIframe ? 500 : 0
+            );
           }
 
           applyBtn.addEventListener("click", () => {
