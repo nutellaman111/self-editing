@@ -6,16 +6,18 @@
     <link rel="stylesheet" href="ace.css" />
   </head>
   <body>
-    <div id="updateBarContainer">
-      <div id="updateBar">Updating in 0.0s</div>
-    </div>
     <div id="editor"></div>
+
+    <div id="floatingPanel">
+      <button id="applyBtn" disabled>Apply Changes</button>
+      <!-- Preview iframe will go here later -->
+    </div>
 
     <script>
       function applyStyles() {
         Object.assign(document.documentElement.style, {
           margin: "0",
-          height: "100%",
+          height: "1000vh",
           width: "100%",
         });
 
@@ -29,29 +31,33 @@
           height: "100%",
           width: "100%",
           fontSize: "1.25rem",
-        });
-
-        Object.assign(document.getElementById("updateBarContainer").style, {
-          position: "sticky",
-          width: "100%",
-          height: "50px",
-          background: "#333",
-          color: "#fff",
-          fontFamily: "monospace",
-          display: "flex",
-          alignItems: "center",
-          zIndex: "100",
-        });
-
-        Object.assign(document.getElementById("updateBar").style, {
           height: "100%",
-          width: "0",
-          background: "#4caf50",
-          transition: "width 0.1s linear",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
         });
+
+        Object.assign(document.getElementById("floatingPanel").style, {
+          position: "fixed",
+          top: "20px",
+          left: "20px",
+          background: "gray",
+          padding: "20px",
+          borderRadius: "8px",
+          zIndex: "1000",
+          cursor: "grab",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+        });
+
+        const applyBtn = document.getElementById("applyBtn");
+        Object.assign(applyBtn.style, {
+          padding: "5px 10px",
+          fontSize: "1rem",
+          cursor: "pointer",
+        });
+
+        applyBtn.disabled = true;
+        applyBtn.style.background = "#555";
+        applyBtn.style.cursor = "not-allowed";
       }
 
       function replaceVariablesInHTML(html, replacements) {
@@ -62,10 +68,35 @@
         return html;
       }
 
+      function makeDraggable(el) {
+        let offsetX = 0,
+          offsetY = 0,
+          dragging = false;
+
+        el.addEventListener("mousedown", (e) => {
+          dragging = true;
+          offsetX = e.clientX - el.offsetLeft;
+          offsetY = e.clientY - el.offsetTop;
+          el.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mouseup", () => {
+          dragging = false;
+          el.style.cursor = "grab";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!dragging) return;
+          el.style.left = e.clientX - offsetX + "px";
+          el.style.top = e.clientY - offsetY + "px";
+        });
+      }
+
       function yeah() {
         let cursorPos = 0;
-        let scrollTop = 0;
+        let scrollPos = 0;
         let initialHTML = document.documentElement.outerHTML;
+        let changesMade = false;
 
         applyStyles();
 
@@ -80,61 +111,44 @@
           });
 
           editor.setValue(initialHTML, -1);
-
-          // Restore cursor and scroll
           editor.focus();
           editor.moveCursorToPosition(
             editor.session.doc.indexToPosition(cursorPos, 0)
           );
-          editor.session.setScrollTop(scrollTop);
+          window.scrollTo(0, scrollPos);
 
-          const bar = document.getElementById("updateBar");
-          let timer = null;
-          const fillTime = 2.0;
+          const applyBtn = document.getElementById("applyBtn");
 
           editor.session.on("change", () => {
-            if (timer) clearInterval(timer);
+            changesMade = true;
+            applyBtn.disabled = false;
+            applyBtn.style.background = "";
+            applyBtn.style.cursor = "pointer";
+          });
 
-            let elapsed = 0;
-            bar.style.width = "0%";
+          applyBtn.addEventListener("click", () => {
+            if (!changesMade) return;
 
-            timer = setInterval(() => {
-              elapsed += 0.05;
-              const pct = Math.min(elapsed / fillTime, 1) * 100;
-              bar.style.width = pct + "%";
-              bar.textContent = `Updating in ${(fillTime - elapsed).toFixed(
-                1
-              )}s`;
+            const pos = editor.getCursorPosition();
+            cursorPos = editor.session.doc.positionToIndex(pos, 0);
+            scrollPos = window.scrollY;
 
-              if (elapsed >= fillTime) {
-                clearInterval(timer);
+            let html = editor.getSession().getValue();
+            html = replaceVariablesInHTML(html, [
+              { name: "cursorPos", value: cursorPos },
+              { name: "scrollPos", value: scrollPos },
+            ]);
 
-                const pos = editor.getCursorPosition();
-                cursorPos = editor.session.doc.positionToIndex(pos, 0);
-                scrollTop = editor.session.getScrollTop();
-
-                let html = editor.getSession().getValue();
-                html = replaceVariablesInHTML(html, [
-                  { name: "cursorPos", value: cursorPos },
-                  { name: "scrollTop", value: scrollTop },
-                ]);
-
-                const audio = new Audio(
-                  "https://www.soundjay.com/buttons/sounds/button-3.mp3"
-                );
-                audio.play();
-
-                document.open();
-                document.write(html);
-                document.close();
-              }
-            }, 50);
+            document.open();
+            document.write(html);
+            document.close();
           });
         };
 
         document.head.appendChild(aceScript);
       }
 
+      makeDraggable(document.getElementById("floatingPanel"));
       yeah();
     </script>
   </body>
