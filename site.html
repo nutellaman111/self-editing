@@ -9,15 +9,19 @@
     <div id="editor"></div>
 
     <div id="floatingPanel">
+      <img
+        id="grip"
+        src="https://raw.githubusercontent.com/nutellaman111/self-editing/94018c2b803ba2b561898225fb510bb4c4e4a1d2/grip.svg"
+      />
       <button id="applyBtn" disabled>Apply Changes</button>
-      <!-- Preview iframe will go here later -->
+      preview:
     </div>
 
     <script>
       function applyStyles() {
         Object.assign(document.documentElement.style, {
           margin: "0",
-          height: "1000vh",
+          height: "100%",
           width: "100%",
         });
 
@@ -30,14 +34,15 @@
         Object.assign(document.getElementById("editor").style, {
           height: "100%",
           width: "100%",
-          fontSize: "1.25rem",
-          height: "100%",
+          fontSize: "2.5vh",
         });
 
         Object.assign(document.getElementById("floatingPanel").style, {
           position: "fixed",
-          top: "20px",
-          left: "20px",
+          top: "-100%",
+          left: "-100%",
+          width: "40%",
+          height: "60%",
           background: "gray",
           padding: "20px",
           borderRadius: "8px",
@@ -46,18 +51,26 @@
           display: "flex",
           flexDirection: "column",
           gap: "10px",
+          userSelect: "none",
         });
 
         const applyBtn = document.getElementById("applyBtn");
         Object.assign(applyBtn.style, {
           padding: "5px 10px",
-          fontSize: "1rem",
           cursor: "pointer",
         });
-
         applyBtn.disabled = true;
         applyBtn.style.background = "#555";
         applyBtn.style.cursor = "not-allowed";
+
+        const grip = document.getElementById("grip");
+        Object.assign(grip.style, {
+          width: "16px",
+          height: "16px",
+          margin: "0 auto",
+          userSelect: "none",
+          pointerEvents: "none",
+        });
       }
 
       function replaceVariablesInHTML(html, replacements) {
@@ -68,33 +81,11 @@
         return html;
       }
 
-      function makeDraggable(el) {
-        let offsetX = 0,
-          offsetY = 0,
-          dragging = false;
-
-        el.addEventListener("mousedown", (e) => {
-          dragging = true;
-          offsetX = e.clientX - el.offsetLeft;
-          offsetY = e.clientY - el.offsetTop;
-          el.style.cursor = "grabbing";
-        });
-
-        document.addEventListener("mouseup", () => {
-          dragging = false;
-          el.style.cursor = "grab";
-        });
-
-        document.addEventListener("mousemove", (e) => {
-          if (!dragging) return;
-          el.style.left = e.clientX - offsetX + "px";
-          el.style.top = e.clientY - offsetY + "px";
-        });
-      }
-
       function yeah() {
         let cursorPos = 0;
         let scrollPos = 0;
+        let panelTop = 5;
+        let panelLeft = 50; // start on the right
         let initialHTML = document.documentElement.outerHTML;
         let changesMade = false;
 
@@ -111,44 +102,117 @@
           });
 
           editor.setValue(initialHTML, -1);
-          editor.focus();
+          /*editor.focus();*/
           editor.moveCursorToPosition(
             editor.session.doc.indexToPosition(cursorPos, 0)
           );
-          window.scrollTo(0, scrollPos);
 
           const applyBtn = document.getElementById("applyBtn");
+          const floatingPanel = document.getElementById("floatingPanel");
+
+          floatingPanel.style.top = panelTop + "vh";
+          floatingPanel.style.left = panelLeft + "vw";
+
+          setTimeout(() => {
+            const maxScroll =
+              editor.session.getScreenLength() * editor.renderer.lineHeight -
+              editor.renderer.$size.scrollerHeight;
+            editor.session.setScrollTop(scrollPos * maxScroll);
+          }, 0);
+
+          function makeDraggable(el) {
+            let offsetX = 0,
+              offsetY = 0,
+              dragging = false;
+
+            el.addEventListener("mousedown", (e) => {
+              dragging = true;
+              offsetX = e.clientX - el.offsetLeft;
+              offsetY = e.clientY - el.offsetTop;
+              el.style.cursor = "grabbing";
+            });
+
+            document.addEventListener("mouseup", () => {
+              dragging = false;
+              el.style.cursor = "grab";
+              onEdit();
+            });
+
+            document.addEventListener("mousemove", (e) => {
+              if (!dragging) return;
+              el.style.left = e.clientX - offsetX + "px";
+              el.style.top = e.clientY - offsetY + "px";
+            });
+          }
+          makeDraggable(floatingPanel);
+
+          let previewIframe = null;
 
           editor.session.on("change", () => {
+            onEdit();
+          });
+
+          editor.session.on("cursorChange", () => {
+            onEdit();
+          });
+
+          function onEdit() {
             changesMade = true;
             applyBtn.disabled = false;
             applyBtn.style.background = "";
             applyBtn.style.cursor = "pointer";
-          });
+
+            // create preview iframe only once
+            if (!previewIframe) {
+              previewIframe = document.createElement("iframe");
+              Object.assign(previewIframe.style, {
+                width: "100%",
+                height: "100%",
+                background: "white",
+              });
+              floatingPanel.appendChild(previewIframe);
+            }
+
+            // update preview content live
+            previewIframe.srcdoc = getModifiedHtml();
+          }
 
           applyBtn.addEventListener("click", () => {
             if (!changesMade) return;
 
-            const pos = editor.getCursorPosition();
-            cursorPos = editor.session.doc.positionToIndex(pos, 0);
-            scrollPos = window.scrollY;
-
-            let html = editor.getSession().getValue();
-            html = replaceVariablesInHTML(html, [
-              { name: "cursorPos", value: cursorPos },
-              { name: "scrollPos", value: scrollPos },
-            ]);
+            let newHtml = getModifiedHtml();
 
             document.open();
-            document.write(html);
+            document.write(newHtml);
             document.close();
           });
+
+          function getModifiedHtml() {
+            // normalized 0..1
+            let scrollTop = editor.session.getScrollTop();
+            let maxScroll =
+              editor.session.getScreenLength() * editor.renderer.lineHeight -
+              editor.renderer.$size.scrollerHeight;
+            console.log("max scroll modify = " + maxScroll);
+
+            scrollPos = scrollTop / maxScroll;
+            console.log(scrollPos);
+
+            panelTop = (floatingPanel.offsetTop / window.innerHeight) * 100;
+            panelLeft = (floatingPanel.offsetLeft / window.innerWidth) * 100;
+
+            return replaceVariablesInHTML(editor.getSession().getValue(), [
+              { name: "cursorPos", value: cursorPos },
+              { name: "scrollPos", value: scrollPos },
+              { name: "panelTop", value: panelTop },
+              { name: "panelLeft", value: panelLeft },
+            ]);
+          }
         };
 
         document.head.appendChild(aceScript);
       }
 
-      makeDraggable(document.getElementById("floatingPanel"));
       yeah();
     </script>
   </body>
