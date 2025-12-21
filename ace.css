@@ -1,3 +1,8 @@
+.ace_comment {
+  color: rgb(195, 71, 233);
+  font-family: "Comic Sans MS", cursive, sans-serif;
+}
+
 .error_widget_wrapper {
   background: inherit;
   color: inherit;
