@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -13,30 +12,27 @@
         id="grip"
         src="https://raw.githubusercontent.com/nutellaman111/self-editing/94018c2b803ba2b561898225fb510bb4c4e4a1d2/grip.svg"
       />
-      <button id="applyBtn" disabled>Apply Changes</button>
+      <button id="applyBtn" disabled="">Apply Changes</button>
       preview:
     </div>
 
     <script>
       function applyStyles() {
         Object.assign(document.documentElement.style, {
-          margin: "0",
           height: "100%",
-          width: "100%",
         });
 
         Object.assign(document.body.style, {
           margin: "0",
           height: "100%",
-          width: "100%",
         });
 
         Object.assign(document.getElementById("editor").style, {
           height: "100%",
-          width: "100%",
           fontSize: "1rem",
         });
 
+        //❤️css for that floaty pannel with the prevuew and stuff ❤️
         Object.assign(document.getElementById("floatingPanel").style, {
           position: "fixed",
           top: "-100%",
@@ -99,15 +95,13 @@
           const editor = ace.edit("editor", {
             mode: "ace/mode/html",
             showPrintMargin: false,
+            theme: null,
+            value: initialHTML,
           });
-
-          editor.setValue(initialHTML, -1);
           editor.moveCursorToPosition(
             editor.session.doc.indexToPosition(cursorPos, 0)
           );
-          if (autoFocus) {
-            editor.focus();
-          }
+          if (autoFocus) editor.focus();
 
           const applyBtn = document.getElementById("applyBtn");
           const floatingPanel = document.getElementById("floatingPanel");
