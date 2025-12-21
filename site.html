@@ -3,42 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <title>Self-Editing Page</title>
-    <style>
-      html,
-      body {
-        margin: 0;
-        height: 100%;
-        width: 100%;
-      }
-
-      #editor {
-        height: 100%;
-        width: 100%;
-        font-size: 1.25rem;
-      }
-
-      #updateBarContainer {
-        position: sticky;
-        width: 100%;
-        height: 50px;
-        background: #333;
-        color: #fff;
-        font-family: monospace;
-        display: flex;
-        align-items: center;
-        z-index: 100;
-      }
-
-      #updateBar {
-        height: 100%;
-        width: 0;
-        background: #4caf50;
-        transition: width 0.1s linear;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    </style>
     <link rel="stylesheet" href="ace.css" />
   </head>
   <body>
@@ -48,8 +12,62 @@
     <div id="editor"></div>
 
     <script>
+      function applyStyles() {
+        Object.assign(document.documentElement.style, {
+          margin: "0",
+          height: "100%",
+          width: "100%",
+        });
+
+        Object.assign(document.body.style, {
+          margin: "0",
+          height: "100%",
+          width: "100%",
+        });
+
+        Object.assign(document.getElementById("editor").style, {
+          height: "100%",
+          width: "100%",
+          fontSize: "1.25rem",
+        });
+
+        Object.assign(document.getElementById("updateBarContainer").style, {
+          position: "sticky",
+          width: "100%",
+          height: "50px",
+          background: "#333",
+          color: "#fff",
+          fontFamily: "monospace",
+          display: "flex",
+          alignItems: "center",
+          zIndex: "100",
+        });
+
+        Object.assign(document.getElementById("updateBar").style, {
+          height: "100%",
+          width: "0",
+          background: "#4caf50",
+          transition: "width 0.1s linear",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        });
+      }
+
+      function replaceVariablesInHTML(html, replacements) {
+        replacements.forEach(({ name, value }) => {
+          const regex = new RegExp(`let\\s+${name}\\s*=\\s*[^;]*;`);
+          html = html.replace(regex, `let ${name} = ${value};`);
+        });
+        return html;
+      }
+
       function yeah() {
+        let cursorPos = 0;
+        let scrollTop = 0;
         let initialHTML = document.documentElement.outerHTML;
+
+        applyStyles();
 
         const aceScript = document.createElement("script");
         aceScript.src =
@@ -63,20 +81,25 @@
 
           editor.setValue(initialHTML, -1);
 
+          // Restore cursor and scroll
+          editor.focus();
+          editor.moveCursorToPosition(
+            editor.session.doc.indexToPosition(cursorPos, 0)
+          );
+          editor.session.setScrollTop(scrollTop);
+
           const bar = document.getElementById("updateBar");
           let timer = null;
-          const fillTime = 2.0; // seconds to fill
+          const fillTime = 2.0;
 
           editor.session.on("change", () => {
-            if (timer) {
-              clearInterval(timer);
-            }
+            if (timer) clearInterval(timer);
 
             let elapsed = 0;
             bar.style.width = "0%";
 
             timer = setInterval(() => {
-              elapsed += 0.05; // interval step
+              elapsed += 0.05;
               const pct = Math.min(elapsed / fillTime, 1) * 100;
               bar.style.width = pct + "%";
               bar.textContent = `Updating in ${(fillTime - elapsed).toFixed(
@@ -85,15 +108,22 @@
 
               if (elapsed >= fillTime) {
                 clearInterval(timer);
-                const html = editor.getSession().getValue();
 
-                // play ding
+                const pos = editor.getCursorPosition();
+                cursorPos = editor.session.doc.positionToIndex(pos, 0);
+                scrollTop = editor.session.getScrollTop();
+
+                let html = editor.getSession().getValue();
+                html = replaceVariablesInHTML(html, [
+                  { name: "cursorPos", value: cursorPos },
+                  { name: "scrollTop", value: scrollTop },
+                ]);
+
                 const audio = new Audio(
                   "https://www.soundjay.com/buttons/sounds/button-3.mp3"
                 );
                 audio.play();
 
-                // update page
                 document.open();
                 document.write(html);
                 document.close();
