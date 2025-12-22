@@ -7,7 +7,19 @@
     <style>
       /*∘₊✧──────────────────❤️CSS❤️──────────────────✧₊∘*/
 
-      /* ➽───❥ page and code editor*/
+      /* ➽───❥ intro*/
+      #intro {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        font-size: 1.5rem;
+      }
+      img {
+        max-width: 722px;
+      }
+
+      /* ➽───❥ page & code editor*/
       html,
       body,
       #editor {
@@ -18,6 +30,7 @@
         font-family: monospace;
         display: flex;
         flex-direction: column;
+        color: white;
       }
 
       /* ➽───❥ the floating panel and the stuff inside it*/
@@ -26,16 +39,17 @@
         top: -100%;
         left: -100%;
         width: 30%;
-        background: #3d3d3d;
-        padding: 20px;
+        background: #535353;
+        padding: 10px;
         border-radius: 8px;
         z-index: 1000;
         cursor: grab;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
         user-select: none;
-        color: white;
+        color: black;
+        font-size: 1.25rem;
       }
 
       #grip {
@@ -43,18 +57,19 @@
         height: 16px;
         margin: 0 auto;
         pointer-events: none;
+        writing-mode: vertical-rl;
       }
 
       #applyBtn {
-        padding: 5px 10px; /*button*/
+        padding: 5px 10px; /*apply button*/
         cursor: pointer;
-        background: #323232;
+        background: #4f0b5e;
         color: white;
         font-family: inherit;
       }
       #applyBtn:disabled {
         cursor: not-allowed;
-        background: #464646;
+        background: #48354d;
         color: rgb(45, 45, 45);
       }
 
@@ -80,31 +95,58 @@
   </head>
   <body>
     <!-- *∘₊✧>──────────────────❤️BODY❤️──────────────────✧₊∘* -->
-    <h1>meow</h1>
+
+    <!-- ➽───❥ intro -->
+    <div id="intro">
+      <img src="https://i.picasion.com/gl/93/l8Yg.gif" />
+      <p>
+        The code below is the entire source of THIS very page!
+        <br />
+        If you make changes to it, the page will update live.
+      </p>
+      To dismiss this message just delete it, its around line 100
+    </div>
+
+    <!-- ➽───❥ editor -->
     <div id="editor"></div>
 
+    <!-- ➽───❥ floaty panel -->
     <div id="floatingPanel">
-      <img
-        id="grip"
-        src="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/grip.svg"
-      />
+      <div id="grip">⠿</div>
       <button id="applyBtn" disabled="">
         Apply Changes (Shortcut: CTRL+S)
       </button>
       preview:
     </div>
 
+    <!-- ➽───❥ music -->
+    <audio id="music" autoplay="" loop="" volume="0.1">
+      <source src="bccgs.ogg" type="audio/mpeg" />
+    </audio>
+
     <script>
       // *∘₊✧>──────────────────❤️SCRIPT❤️──────────────────✧₊∘*
 
-      LETSGO(); // all variables have to be defined inside some function or everything breaks
+      LETSGO(); // all variables have to be declared inside some function or everything breaks
       async function LETSGO() {
-        let cursorPos = 361; // some of these declarations get modified, ill explain later make a mental note!!!!
-        let scrollPos = 95.99999633789062;
-        let panelTop = 48;
-        let autoFocus = true;
-        let panelLeft = 653;
+        let cursorPos = 0; // some of these declarations get modified, ill explain later make a mental note!!!!
+        let scrollPos = 0;
+        let panelTop = window.innerHeight * 0.5;
+        let panelLeft = window.innerWidth * 0.65;
+        let isPreview = false;
         let changesMade = false;
+        let musicIndex = 0;
+
+        // ➽───❥ ding! + music
+
+        if (!isPreview) {
+          Object.assign(new Audio("bell.ogg"), { volume: 0.2 }).play();
+        }
+
+        let playlist = ["password", "bccgs", "fishylove", "moredata"];
+        let music = document.getElementById("music");
+        music.volume = 0.3;
+        music.src = `${musicIndex}.ogg`;
 
         // ➽───❥ capture the page's html before scripts modify it
 
@@ -122,6 +164,7 @@
           showPrintMargin: false,
           theme: "ace/theme/ambiance",
           value: initialHTML,
+          fontSize: "1.25rem",
         });
 
         // ➽───❥ restore scrollbar and cursor positions from last render
@@ -129,7 +172,7 @@
         editor.moveCursorToPosition(
           editor.session.doc.indexToPosition(cursorPos, 0)
         );
-        if (autoFocus) editor.focus();
+        if (!isPreview) editor.focus();
 
         setTimeout(() => {
           editor.session.setScrollTop(scrollPos);
@@ -205,7 +248,7 @@
                 dummy.appendChild(previewIframe);
               }
 
-              previewIframe.srcdoc = getHtmlFromEditorAndApplyPatches(false);
+              previewIframe.srcdoc = getHtmlFromEditorAndApplyPatches(true);
             },
             previewIframe ? 500 : 0
           );
@@ -218,8 +261,8 @@
         //        we do that by patching the variable declarations i told u to remember from before.
         //        for example "let cursorPos = 0;" turns into "let cursorPos = 67;"
 
-        function getHtmlFromEditorAndApplyPatches(autoFocus = true) {
-          return replaceVariablesInHTML(editor.getSession().getValue(), [
+        function getHtmlFromEditorAndApplyPatches(isPreview = false) {
+          return patchHtml(editor.getSession().getValue(), [
             {
               name: "cursorPos",
               value: editor.session.doc.positionToIndex(
@@ -227,14 +270,15 @@
                 0
               ),
             },
-            { name: "autoFocus", value: autoFocus },
+            { name: "isPreview", value: isPreview },
             { name: "scrollPos", value: editor.session.getScrollTop() },
             { name: "panelTop", value: floatingPanel.offsetTop },
             { name: "panelLeft", value: floatingPanel.offsetLeft },
+            { name: "musicIndex", value: (musicIndex + 1) % 3 },
           ]);
         }
 
-        function replaceVariablesInHTML(html, replacements) {
+        function patchHtml(html, replacements) {
           replacements.forEach(({ name, value }) => {
             const regex = new RegExp(`let\\s+${name}\\s*=\\s*[^;]*;`);
             html = html.replace(regex, `let ${name} = ${value};`);
@@ -243,7 +287,7 @@
         }
       }
 
-      // some helper functions
+      // ➽───❥ some helper functions
 
       function makePanelDraggable(el) {
         let offsetX = 0,

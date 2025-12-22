@@ -5,7 +5,6 @@
 
 /* Scrollbar track */
 .ace_scrollbar::-webkit-scrollbar {
-  width: 15px;
   background-color: #2b2b2b; /* match Ambiance background */
 }
 
