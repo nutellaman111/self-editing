@@ -12,10 +12,9 @@
       /* ➽───❥ intro*/
       #intro {
         display: flex;
-        flex-direction: column;
-        align-items: center;
         padding: 20px;
         font-size: 1.5rem;
+        gap: 20px;
       }
       img {
         max-width: 722px;
@@ -60,7 +59,6 @@
         width: 16px;
         height: 16px;
         margin: 0 auto;
-        pointer-events: none;
         writing-mode: vertical-rl;
       }
 
@@ -98,6 +96,17 @@
         border-style: inset;
         border-color: #7a7a7a #777 #777 #7a7a7a;
       }
+
+      /* ➽───❥ tooltip that says where elements are defined*/
+      #tooltip {
+        position: fixed;
+        pointer-events: none;
+        color: #eee;
+        padding: 4px 6px;
+        font-size: 12px;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+      }
     </style>
   </head>
   <body>
@@ -105,18 +114,27 @@
 
     <!-- ➽───❥ intro -->
     <div id="intro">
-      <img id="title" src="https://i.picasion.com/gl/93/l8Yg.gif" />
-      <p id="thecode">
-        The code below is the entire source of THIS very page!
-        <br />
-        If you make changes to it, the page will update live.
-      </p>
-      <div id="todismiss">
-        To dismiss this message just delete it, its around line 100
+      <img
+        id="kitty"
+        src="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/cat.gif"
+      />
+      <div id="introText">
+        <img
+          id="title"
+          src="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/title.gif"
+        />
+        <p id="thecode">
+          The code below is the entire source of THIS very page!
+          <br />
+          If you make changes to it, the page will update live.
+        </p>
+        <div id="todismiss">
+          To dismiss this message just delete it, its around line 110
+        </div>
       </div>
     </div>
 
-    <!-- ➽───❥ editor -->
+    <!-- ➽───❥ ace code editor -->
     <div id="editor"></div>
 
     <!-- ➽───❥ floaty panel -->
@@ -133,6 +151,8 @@
     <audio id="music" autoplay="" loop="" volume="0.1">
       <source type="audio/ogg" />
     </audio>
+
+    <div id="tooltip"></div>
 
     <script>
       // *∘₊✧>──────────────────❤️SCRIPT❤️──────────────────✧₊∘*
@@ -203,6 +223,7 @@
 
         editor.session.on("change", () => {
           updatePreview();
+          updateTooltip();
         });
 
         // ➽───❥ initialise the floating draggable pannel
@@ -305,10 +326,51 @@
           });
           return html;
         }
+
+        // ➽───❥ tooltip!
+        //        when you hover over an element, it says where it is
+
+        const tooltip = document.getElementById("tooltip");
+        let tooltipElement = null;
+
+        document.addEventListener("mousemove", (e) => {
+          tooltip.style.left = e.clientX + 12 + "px";
+          tooltip.style.top = e.clientY + 12 + "px";
+        });
+
+        document.addEventListener("mouseover", (e) => {
+          tooltipElement = e.target;
+          updateTooltip();
+        });
+        function updateTooltip() {
+          tooltip.style.display =
+            tooltipElement.tagName === "IFRAME" ? "none" : "block";
+          tooltip.textContent = `defined at line ${findWhereElementIsDefined(
+            tooltipElement,
+            editor.getSession().getValue()
+          )}`;
+        }
       }
 
       // ➽───❥ some helper functions
 
+      //find out on which line an element is defined by searching for [id="1234"]
+      //if its not found we try looking for its ancestors until we find something
+      function findWhereElementIsDefined(el, html) {
+        while (el) {
+          if (el.id) {
+            const needle = `id="${el.id}"`;
+            const idx = html.indexOf(needle);
+            if (idx !== -1) {
+              return html.slice(0, idx).split("\n").length;
+            }
+          }
+          el = el.parentElement;
+        }
+        return null;
+      }
+
+      /*makes the preview pannel movable*/
       function makePanelDraggable(el) {
         let offsetX = 0,
           offsetY = 0,
@@ -332,6 +394,8 @@
           el.style.top = e.clientY - offsetY + "px";
         });
       }
+
+      /*attaches an array scripts to the html's head in order*/
       async function loadScripts(urls) {
         for (const url of urls) {
           await new Promise((res, rej) => {
