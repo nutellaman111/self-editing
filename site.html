@@ -2,8 +2,10 @@
   <head>
     <meta charset="UTF-8" />
     <title>Most Open Source Website Ever</title>
-    <link rel="stylesheet" href="ace.css" />
-    <!--href="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css"-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css"
+    />
     <style>
       /*∘₊✧──────────────────❤️CSS❤️──────────────────✧₊∘*/
 
@@ -34,11 +36,12 @@
       }
 
       /* ➽───❥ the floating panel and the stuff inside it*/
+      /*the panel itself*/
       #floatingPanel {
-        position: fixed; /*panel itself*/
+        position: fixed;
         top: -100%;
         left: -100%;
-        width: 30%;
+        width: 30%; /*change this to make the preview bigger or smaller!!!*/
         background: #535353;
         padding: 10px;
         border-radius: 8px;
@@ -52,16 +55,18 @@
         font-size: 1.25rem;
       }
 
+      /*the ⠿ symbol thing*/
       #grip {
-        width: 16px; /*the ⠿ thing on the panel*/
+        width: 16px;
         height: 16px;
         margin: 0 auto;
         pointer-events: none;
         writing-mode: vertical-rl;
       }
 
+      /*apply button*/
       #applyBtn {
-        padding: 5px 10px; /*apply button*/
+        padding: 5px 10px;
         cursor: pointer;
         background: #4f0b5e;
         color: white;
@@ -73,13 +78,15 @@
         color: rgb(45, 45, 45);
       }
 
+      /*dummy element that reserves space for the preview */
       .previewDummy {
-        width: 100%; /*dummy element that reserves space for the preview */
+        width: 100%;
         position: relative;
       }
 
+      /*the actual preview*/
       .previewIframe {
-        position: absolute; /*actual preview*/
+        position: absolute;
         box-sizing: border-box;
         top: 0;
         left: 0;
@@ -98,13 +105,15 @@
 
     <!-- ➽───❥ intro -->
     <div id="intro">
-      <img src="https://i.picasion.com/gl/93/l8Yg.gif" />
-      <p>
+      <img id="title" src="https://i.picasion.com/gl/93/l8Yg.gif" />
+      <p id="thecode">
         The code below is the entire source of THIS very page!
         <br />
         If you make changes to it, the page will update live.
       </p>
-      To dismiss this message just delete it, its around line 100
+      <div id="todismiss">
+        To dismiss this message just delete it, its around line 100
+      </div>
     </div>
 
     <!-- ➽───❥ editor -->
@@ -116,12 +125,13 @@
       <button id="applyBtn" disabled="">
         Apply Changes (Shortcut: CTRL+S)
       </button>
+      <div></div>
       preview:
     </div>
 
     <!-- ➽───❥ music -->
     <audio id="music" autoplay="" loop="" volume="0.1">
-      <source src="bccgs.ogg" type="audio/mpeg" />
+      <source type="audio/ogg" />
     </audio>
 
     <script>
@@ -129,28 +139,39 @@
 
       LETSGO(); // all variables have to be declared inside some function or everything breaks
       async function LETSGO() {
-        let cursorPos = 0; // some of these declarations get modified, ill explain later make a mental note!!!!
+        // ➽───❥ capture the page's html before scripts modify it
+
+        let initialHTML = document.documentElement.outerHTML;
+
+        // ➽───❥ state variable declarations that get patched when applying changes
+        let cursorPos = 0;
         let scrollPos = 0;
         let panelTop = window.innerHeight * 0.5;
         let panelLeft = window.innerWidth * 0.65;
         let isPreview = false;
-        let changesMade = false;
         let musicIndex = 0;
 
-        // ➽───❥ ding! + music
+        // ➽───❥ sfx + music! (doesnt play in the preview)
 
-        if (!isPreview) {
-          Object.assign(new Audio("bell.ogg"), { volume: 0.2 }).play();
-        }
-
+        const filehost = `https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/`;
         let playlist = ["password", "bccgs", "fishylove", "moredata"];
-        let music = document.getElementById("music");
-        music.volume = 0.3;
-        music.src = `${musicIndex}.ogg`;
+        if (!isPreview) {
+          Object.assign(new Audio(filehost + "bell.ogg"), {
+            volume: 0.2,
+          }).play();
 
-        // ➽───❥ capture the page's html before scripts modify it
+          let music = document.getElementById("music");
+          music.volume = 0.3;
+          music.src = filehost + playlist[musicIndex] + `.ogg`;
 
-        let initialHTML = document.documentElement.outerHTML;
+          document.addEventListener(
+            "click",
+            () => {
+              music.play();
+            },
+            { once: true }
+          );
+        }
 
         // ➽───❥ load "ace" code editor from cdn and put the html inside
 
@@ -195,7 +216,7 @@
         //        the html of the entire page really does get replaced with what you have written down in the code editor
 
         const applyChanges = () => {
-          let newHtml = getHtmlFromEditorAndApplyPatches();
+          let newHtml = getHtmlFromEditorAndApplyPatches(isPreview);
           document.open();
           document.write(newHtml);
           document.close();
@@ -221,7 +242,6 @@
           clearTimeout(editTimeout);
           editTimeout = setTimeout(
             () => {
-              changesMade = true;
               applyBtn.disabled = false;
 
               if (!previewIframe) {
@@ -258,10 +278,10 @@
         //        ok so like normally when u replace some page's entire html, things like cursor position get reset.
         //        which is annoying.
         //        so we have to somehow tell the next version of the page where the cursor and stuff were.
-        //        we do that by patching the variable declarations i told u to remember from before.
+        //        we do that by patching the variable declarations at the start.
         //        for example "let cursorPos = 0;" turns into "let cursorPos = 67;"
 
-        function getHtmlFromEditorAndApplyPatches(isPreview = false) {
+        function getHtmlFromEditorAndApplyPatches(patchAsPreview = false) {
           return patchHtml(editor.getSession().getValue(), [
             {
               name: "cursorPos",
@@ -270,11 +290,11 @@
                 0
               ),
             },
-            { name: "isPreview", value: isPreview },
+            { name: "isPreview", value: patchAsPreview },
             { name: "scrollPos", value: editor.session.getScrollTop() },
             { name: "panelTop", value: floatingPanel.offsetTop },
             { name: "panelLeft", value: floatingPanel.offsetLeft },
-            { name: "musicIndex", value: (musicIndex + 1) % 3 },
+            { name: "musicIndex", value: (musicIndex + 1) % playlist.length },
           ]);
         }
 
