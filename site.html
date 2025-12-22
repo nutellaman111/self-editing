@@ -7,7 +7,7 @@
       href="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css"
     />
     <style>
-      /*∘₊✧──────────────────❤️CSS❤️──────────────────✧₊∘*/
+      /*∘₊✧──────────────────❤️❤️❤️CSS❤️❤️❤️──────────────────✧₊∘*/
 
       /* ➽───❥ intro*/
       #intro {
@@ -40,7 +40,7 @@
         position: fixed;
         top: -100%;
         left: -100%;
-        width: 30%; /*change this to make the preview bigger or smaller!!!*/
+        width: 30%; /*make this bigger to play page inception*/
         background: #535353;
         padding: 10px;
         border-radius: 8px;
@@ -99,6 +99,8 @@
 
       /* ➽───❥ tooltip that says where elements are defined*/
       #tooltip {
+        top: -100%;
+        left: -100%;
         position: fixed;
         pointer-events: none;
         color: #eee;
@@ -110,9 +112,9 @@
     </style>
   </head>
   <body>
-    <!-- *∘₊✧>──────────────────❤️BODY❤️──────────────────✧₊∘* -->
+    <!-- *∘₊✧>──────────────────❤️❤️❤️BODY❤️❤️❤️──────────────────✧₊∘* -->
 
-    <!-- ➽───❥ intro -->
+    <!-- ➽───❥ intro!!! you can delete this!!!!!-->
     <div id="intro">
       <img
         id="kitty"
@@ -129,10 +131,16 @@
           If you make changes to it, the page will update live.
         </p>
         <div id="todismiss">
-          To dismiss this message just delete it, its around line 110
+          To dismiss this message just delete it, its around line 120. music is
+          there too
         </div>
       </div>
     </div>
+
+    <!-- ➽───❥ music!!!!!!!! delete to mute forever!!!!! -->
+    <audio id="music" autoplay="" loop="" volume="0.1">
+      <source type="audio/ogg" />
+    </audio>
 
     <!-- ➽───❥ ace code editor -->
     <div id="editor"></div>
@@ -143,24 +151,18 @@
       <button id="applyBtn" disabled="">
         Apply Changes (Shortcut: CTRL+S)
       </button>
-      <div></div>
-      preview:
+      <div id="previewText">preview:</div>
     </div>
 
-    <!-- ➽───❥ music -->
-    <audio id="music" autoplay="" loop="" volume="0.1">
-      <source type="audio/ogg" />
-    </audio>
-
+    <!-- ➽───❥ the tooltip thing that says where elements are defined -->
     <div id="tooltip"></div>
 
     <script>
-      // *∘₊✧>──────────────────❤️SCRIPT❤️──────────────────✧₊∘*
+      // *∘₊✧>──────────────────❤️❤️❤️SCRIPT❤️❤️❤️──────────────────✧₊∘*
 
       LETSGO(); // all variables have to be declared inside some function or everything breaks
       async function LETSGO() {
         // ➽───❥ capture the page's html before scripts modify it
-
         let initialHTML = document.documentElement.outerHTML;
 
         // ➽───❥ state variable declarations that get patched when applying changes
@@ -181,16 +183,18 @@
           }).play();
 
           let music = document.getElementById("music");
-          music.volume = 0.3;
-          music.src = filehost + playlist[musicIndex] + `.ogg`;
+          if (music) {
+            music.volume = 0.3;
+            music.src = filehost + playlist[musicIndex] + `.ogg`;
 
-          document.addEventListener(
-            "click",
-            () => {
-              music.play();
-            },
-            { once: true }
-          );
+            document.addEventListener(
+              "click",
+              () => {
+                music.play();
+              },
+              { once: true }
+            );
+          }
         }
 
         // ➽───❥ load "ace" code editor from cdn and put the html inside
