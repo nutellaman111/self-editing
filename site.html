@@ -2,10 +2,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>Most Open Source Website Ever</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css"
-    />
+    <link rel="stylesheet" href="ace.css" />
+    <!--href="https://cdn.jsdelivr.net/gh/nutellaman111/self-editing@main/ace.css"-->
     <style>
       /*∘₊✧──────────────────❤️CSS❤️──────────────────✧₊∘*/
 
@@ -101,11 +99,11 @@
 
       LETSGO(); // all variables have to be defined inside some function or everything breaks
       async function LETSGO() {
-        let cursorPos = 0; // some of these declarations get modified, ill explain later make a mental note!!!!
-        let scrollPos = 0;
-        let panelTop = window.innerHeight * 0.1;
+        let cursorPos = 361; // some of these declarations get modified, ill explain later make a mental note!!!!
+        let scrollPos = 95.99999633789062;
+        let panelTop = 48;
         let autoFocus = true;
-        let panelLeft = window.innerWidth * 0.6;
+        let panelLeft = 653;
         let changesMade = false;
 
         // ➽───❥ capture the page's html before scripts modify it
@@ -115,8 +113,8 @@
         // ➽───❥ load "ace" code editor from cdn and put the html inside
 
         await loadScripts([
-          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/ace.js",
-          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.15.0/theme-ambiance.min.js",
+          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.43.0/ace.js",
+          "https://cdnjs.cloudflare.com/ajax/libs/ace/1.43.0/theme-ambiance.min.js",
         ]);
 
         const editor = ace.edit("editor", {
@@ -187,9 +185,9 @@
                 const aspectRatio = window.innerHeight / window.innerWidth;
 
                 // ➽───❥ the iframe is rendered at screen resolution then shrinked down with css.
-                // the html layout doesnt account for transformations, so what i do is -
-                // 1. render a dummy element to reserve space in the layout,
-                // 2. position the iframe on top of it
+                //        the html layout doesnt account for transformations, so what i do is -
+                //        1. render a dummy element to reserve space in the layout,
+                //        2. position the iframe on top of it
 
                 const dummy = document.createElement("div");
                 dummy.className = "previewDummy";
